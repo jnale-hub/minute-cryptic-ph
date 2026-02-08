@@ -1,42 +1,62 @@
 "use client";
 import KeyButton from "@/components/KeyButton";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 type Props = {
   onInput: (c: string) => void;
   onBackspace: () => void;
 };
 
+const ROW1 = "qwertyuiop".split("");
+const ROW2 = "asdfghjkl".split("");
+const ROW3 = "zxcvbnm".split("");
+
 const Keyboard = ({ onInput, onBackspace }: Props) => {
+  const row1Buttons = useMemo(
+    () =>
+      ROW1.map((char) => (
+        <KeyButton key={char} char={char} onClickAction={() => onInput(char)} />
+      )),
+    [onInput],
+  );
+
+  const row2Buttons = useMemo(
+    () =>
+      ROW2.map((char) => (
+        <KeyButton key={char} char={char} onClickAction={() => onInput(char)} />
+      )),
+    [onInput],
+  );
+
+  const row3Buttons = useMemo(
+    () =>
+      ROW3.map((char) => (
+        <KeyButton key={char} char={char} onClickAction={() => onInput(char)} />
+      )),
+    [onInput],
+  );
+
   return (
     <div className="flex flex-col gap-2 pb-2 px-1">
       {/* Keyboard row 1 */}
-      <div className="flex gap-1 w-full">
-        {"qwertyuiop".split("").map((char) => (
-          <KeyButton key={char} char={char} onClick={() => onInput(char)} />
-        ))}
-      </div>
+      <div className="flex gap-1 w-full">{row1Buttons}</div>
 
       {/* Keyboard row 2 */}
-      <div className="flex gap-1 w-full px-4">
-        {"asdfghjkl".split("").map((char) => (
-          <KeyButton key={char} char={char} onClick={() => onInput(char)} />
-        ))}
-      </div>
+      <div className="flex gap-1 w-full px-4">{row2Buttons}</div>
 
       {/* Keyboard row 3 */}
       <div className="flex gap-1 w-full px-1">
-        {"zxcvbnm".split("").map((char) => (
-          <KeyButton key={char} char={char} onClick={() => onInput(char)} />
-        ))}
+        {row3Buttons}
 
         {/* delete button */}
         <button
+          type="button"
+          aria-label="delete"
           onClick={(e) => {
             e.preventDefault();
             onBackspace();
           }}
-          className="flex-[1.5] h-12 sm:h-14 flex items-center justify-center bg-white text-ink border-2 border-ink rounded-lg active:bg-pastel-pink transition-colors"
+          className="flex-[1.5] h-12 sm:h-14 flex items-center justify-center font-semibold text-xl sm:text-2xl pb-1 bg-white rounded-lg active:translate-y-0.5 active:shadow-none transition-all touch-manipulation"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
