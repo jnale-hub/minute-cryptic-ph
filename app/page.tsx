@@ -1,65 +1,128 @@
-import Image from "next/image";
+"use client";
+import ActionButton from "@/components/ActionButton";
+import AnswerGrid from "@/components/AnswerGrid";
+import ClueDisplay from "@/components/ClueDisplay";
+import HintsDrawer from "@/components/HintsDrawer";
+import Keyboard from "@/components/Keyboard";
+import { CLUES } from "@/data/clues";
+import { useCrypticGame } from "@/hooks/useCrypticGame";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
-export default function Home() {
+export default function MinuteCrypticRefined() {
+  const [clueIndex, setClueIndex] = useState(0);
+  const activeClue = CLUES[clueIndex];
+
+  const {
+    guess,
+    handleInput,
+    handleBackspace,
+    checkAnswer,
+    revealLetter,
+    toggleHint,
+    hints,
+    status,
+    shake,
+    revealed,
+  } = useCrypticGame(activeClue);
+  const [isHintOpen, setIsHintOpen] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isHintOpen) return;
+      if (e.key === "Backspace") handleBackspace();
+      if (/^[a-zA-Z]$/.test(e.key)) handleInput(e.key);
+      if (e.key === "Enter") checkAnswer();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleInput, handleBackspace, checkAnswer, isHintOpen]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="min-h-screen bg-pastel-bg flex flex-col overflow-hidden relative">
+      {/* Main scrollable content area */}
+      <div className="grow flex flex-col items-center p-4 overflow-y-auto pb-4">
+        <header className="w-full max-w-lg flex justify-between items-center py-4 mb-2">
+          <div className="bg-ink text-white px-4 py-1.5 font-bold text-lg border-2 border-transparent shadow-soft rounded-2xl -rotate-1 font-mulish">
+            Minute Cryptic
+          </div>
+          <button
+            onClick={() => setClueIndex((prev) => (prev + 1) % CLUES.length)}
+            className="bg-white px-3 py-1.5 text-xs font-bold border-2 border-ink rounded-xl shadow-soft-sm active:translate-y-px active:shadow-none"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            Next →
+          </button>
+        </header>
+
+        <div className="w-full max-w-lg">
+          <ClueDisplay clue={activeClue} activeHints={hints} />
+        </div>
+
+        <div
+          ref={gridRef}
+          className="flex flex-col items-center w-full max-w-lg"
+        >
+          {/* Answer grid */}
+          <AnswerGrid
+            guess={guess}
+            status={status}
+            shake={shake}
+            revealed={revealed}
+          />
+
+          <div className="flex justify-center gap-3 w-full px-2">
+            <ActionButton
+              label="Hints"
+              color="bg-pastel-yellow"
+              onClick={() => setIsHintOpen(true)}
+              disabled={status === "won"}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <ActionButton
+              label="Check"
+              color="bg-pastel-pink"
+              onClick={checkAnswer}
+              disabled={status === "won"}
+            />
+          </div>
         </div>
-      </main>
-    </div>
+
+        <AnimatePresence>
+          {status === "won" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-lg bg-white border-2 border-ink p-4 shadow-soft rounded-2xl mt-6"
+            >
+              <div className="relative inline-block">
+                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-5 bg-pastel-pink"></div>
+                <div className="relative font-sansita font-bold text-xl mb-1">
+                  explanation
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed text-ink">
+                {activeClue.fullExplanation}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Fixed bottom keyboard area */}
+      <div className="w-full bg-pastel-bg pb-safe px-1 pt-2 z-10 max-w-2xl mx-auto border-t-2 border-transparent">
+        <Keyboard onInput={handleInput} onBackspace={handleBackspace} />
+      </div>
+
+      <AnimatePresence>
+        {isHintOpen && (
+          <HintsDrawer
+            onClose={() => setIsHintOpen(false)}
+            hints={hints}
+            toggleHint={toggleHint}
+            revealLetter={revealLetter}
+          />
+        )}
+      </AnimatePresence>
+    </main>
   );
 }
