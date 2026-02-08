@@ -2,16 +2,16 @@
 
 type KeyButtonProps = {
   char: string;
-  onClick: () => void;
+  onClickAction: () => void;
   isSpecial?: boolean;
 };
 
-export default function KeyButton({ char, onClick, isSpecial }: KeyButtonProps) {
+export default function KeyButton({ char, onClickAction, isSpecial }: KeyButtonProps) {
   return (
     <button
       onClick={(e) => {
         e.preventDefault();
-        onClick();
+        onClickAction();
       }}
       className={`
       flex-1 h-12 sm:h-14 
